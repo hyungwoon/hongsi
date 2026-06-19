@@ -2,13 +2,20 @@
 
 홍시 슈나우저를 **Clawd on Desk** 앱의 도크 아이콘으로 쓰기 위한 패키지.
 
-> **방식:** 번들 안 `Contents/Resources/icon.icns`를 교체한다. Clawd는 Electron 앱이라
-> 실행 시 이 icns로 도크 타일을 그리기 때문에, Finder 커스텀 아이콘 방식은 도크엔 안 먹힌다.
-> 리소스만 바꾸므로 서명 seal 경고는 뜨지만 hardened runtime 실행엔 무관(앱 정상 실행 확인됨).
-> 실행 파일/엔타이틀먼트는 안 건드린다.
+`apply-to-clawd.sh`가 세 곳을 한 번에 바꾼다:
 
-> ⚠️ 앱이 **자동업데이트되면 icon.icns가 원래대로 덮어써진다**. 그때마다 `apply-to-clawd.sh`만
-> 다시 실행하면 복구된다. 원본은 `clawd-icon-original.icns`로 백업돼 있다.
+1. **실행 중 도크 타일** ← 핵심. Clawd는 Electron이라 `app.dock.setIcon(assets/dock-icon.png)`로
+   도크를 런타임에 그린다. 그래서 `app.asar` 안 `dock-icon.png`를 홍시로 교체해야 실제 도크가 바뀐다.
+   asar는 무결성 검증(파일별 SHA256 + `Info.plist`의 헤더 SHA256)이 걸려 있어 모두 재계산한다.
+2. **번들 아이콘** `Contents/Resources/icon.icns` ← Finder/미실행 상태 표시용.
+3. **표시 이름** `CFBundleDisplayName` = Hongsi ← Finder/도크 라벨.
+
+> 리소스만 바꾸므로 코드서명 seal 경고는 뜨지만 hardened runtime 실행엔 무관(앱 정상 실행 확인됨).
+> 실행 파일/엔타이틀먼트는 안 건드린다. **`CFBundleName`·`package.json`의 name/productName도 안 건드린다**
+> (전자는 헬퍼앱 크래시, 후자는 userData 경로가 바뀌어 로그인/설정 유실).
+
+> ⚠️ 앱이 **자동업데이트되면 전부 원래대로 덮어써진다**. 그때마다 `apply-to-clawd.sh`만 다시
+> 실행하면 복구된다. 원본은 `clawd-*-original.*` / `clawd-app.asar.backup`으로 백업된다(최초 apply 때 자동).
 
 ## 빠른 사용
 
@@ -32,6 +39,9 @@ cd app-icon
 | `apply-to-clawd.sh` | 도크 아이콘 설정 (Finder 커스텀 아이콘) |
 | `revert-clawd.sh` | 원래대로 복원 |
 | `build-icns.sh` | `<1024.png>` → `.icns` 변환 |
+| `repack-dock-icon.py` | app.asar 안 `dock-icon.png` 교체 + 무결성/Info.plist 해시 재계산 (apply/revert가 호출) |
+| `clawd-dock-icon-original.png` | 앱 **원본 도크 아이콘** 백업 (revert용, gitignore) |
+| `clawd-app.asar.backup` | 원본 app.asar 통째 백업 (비상 복원용, 7.7MB, gitignore) |
 | `variants/face-*.png` | 9개 포즈 × 감색 배경 + 얼굴확대 (아이콘 후보) |
 | `variants/tr-*.png` | 9개 포즈 × 투명 전신 (참고) |
 | `preview.html` | 후보 비교 페이지 (`open preview.html`) |
@@ -69,15 +79,22 @@ cp variants/face-happy.png hongsi-app-icon.png
 SVG 렌더는 macOS 기본 `qlmanage`(QuickLook)를 쓴다 — 외부 의존성 없음.
 재생성 로직은 커밋 히스토리의 생성 스크립트 참고.
 
-## 동작 원리 (번들 icon.icns 교체)
+## 동작 원리
 
-1. 최초 1회 원본 `icon.icns`를 `clawd-icon-original.icns`로 백업
-2. `hongsi-app-icon.icns`를 `$APP/Contents/Resources/icon.icns`로 복사
-3. `lsregister -f "$APP"` — LaunchServices에 번들 재등록(아이콘 다시 읽힘)
-4. 실행 중이면 앱 종료 후 `open` — Electron이 새 icns로 도크 타일을 그림
+**왜 단순 교체로는 안 됐나:** Clawd는 Electron 앱이라 실행될 때 코드에서
+`app.dock.setIcon(nativeImage.createFromPath(".../assets/dock-icon.png"))`로 도크 타일을 직접 그린다.
+그래서 번들 `icon.icns`나 Finder 커스텀 아이콘을 바꿔도 **실행 중 도크는 안 바뀐다**.
+도크를 진짜로 바꾸려면 `app.asar` 안 `dock-icon.png`를 교체해야 한다.
 
-복원(`revert-clawd.sh`)은 `clawd-icon-original.icns`를 다시 덮어쓰고 재등록·재시작.
-필요 도구(`sips`/`iconutil`/`lsregister`/`osascript`)는 모두 macOS 기본 제공.
+**asar 교체 (`repack-dock-icon.py`):**
+1. `selftest` — 변경 없는 재패킹이 원본과 바이트 100% 동일한지 확인(아니면 중단)
+2. 최초 1회 원본 `dock-icon.png` 추출 백업
+3. `dock-icon.png`를 홍시 PNG로 교체, 그 파일의 무결성 블록(SHA256) 재계산
+4. 모든 파일 오프셋 재배치 + 헤더 재직렬화 → 헤더 SHA256 재계산
+5. `Info.plist`의 `ElectronAsarIntegrity:Resources/app.asar:hash`를 새 헤더 해시로 갱신
+   (이게 안 맞으면 Electron이 실행을 거부)
+6. 재패킹 후 전 파일을 재추출해 원본과 일치하는지 자체검증
 
-> 참고: Finder 표시 아이콘만 바꾸고 싶을 땐 Finder 커스텀 아이콘(`Icon\r` + `SetFile -a C`)도
-> 가능하지만, 실행 중인 Electron 도크 타일에는 적용되지 않아 여기선 쓰지 않는다.
+복원(`revert-clawd.sh`)은 같은 도구로 `dock-icon.png`를 원본으로 되돌리고(해시 자동 ac26f470으로 복귀),
+`icon.icns`·`Info.plist`도 백업본으로 되돌린다.
+필요 도구(`python3`/`sips`/`iconutil`/`lsregister`/`osascript`)는 모두 macOS 기본 제공.

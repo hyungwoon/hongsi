@@ -12,7 +12,10 @@ LSREG=/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/La
 [ -f "$BACKUP" ] || { echo "❌ 원본 백업 없음: $BACKUP (이미 원본이거나 백업 유실)"; exit 1; }
 
 cp "$BACKUP" "$ICNS"
-# 이름도 원래대로 (Info.plist 백업이 있으면 복원)
+# 실행 중 도크 아이콘: app.asar 안 dock-icon.png를 원본으로 되돌림(+무결성/Info.plist 헤더해시 갱신)
+DOCK_ORIG="$HERE/clawd-dock-icon-original.png"
+[ -f "$DOCK_ORIG" ] && python3 "$HERE/repack-dock-icon.py" apply "$DOCK_ORIG" "$APP"
+# 이름/해시도 원래대로 (Info.plist 백업 복원 — asar이 원본이라 헤더해시도 일치)
 [ -f "$HERE/clawd-info-original.plist" ] && cp "$HERE/clawd-info-original.plist" "$APP/Contents/Info.plist"
 rm -f "$APP/Icon"$'\r'; SetFile -a c "$APP" 2>/dev/null || true   # Finder 커스텀 아이콘 잔재 제거
 "$LSREG" -f "$APP" 2>/dev/null || true

@@ -41,6 +41,12 @@ DISPLAY_NAME="${DISPLAY_NAME:-Hongsi}"
 /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName $DISPLAY_NAME" "$PLIST" 2>/dev/null \
   || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string $DISPLAY_NAME" "$PLIST"
 
+# 실행 중 도크 타일: Clawd는 app.dock.setIcon(assets/dock-icon.png)로 도크를 런타임에 그린다.
+#   → app.asar 안 dock-icon.png를 교체해야 실제 도크가 바뀐다. asar 무결성 해시 + Info.plist
+#   헤더 해시도 재계산한다(아래 파이썬). 이게 도크 변경의 핵심 단계.
+DOCK_PNG="${DOCK_PNG:-$HERE/hongsi-app-icon.png}"
+python3 "$HERE/repack-dock-icon.py" apply "$DOCK_PNG" "$APP"
+
 "$LSREG" -f "$APP" 2>/dev/null || true
 
 # 실행 중이면 재시작해야 도크가 새 아이콘을 읽는다
