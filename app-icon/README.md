@@ -28,12 +28,29 @@ cd app-icon
 | `hongsi-app-icon.png` | **현재 기본 아이콘** 원본 (1024px, = `variants/face-idle.png`) |
 | `hongsi-app-icon.icns` | 실제 적용에 쓰는 .icns (apply 기본 소스) |
 | `clawd-icon-original.icns` | **앱 원본 아이콘 백업** (revert 복원용, 최초 apply 때 자동 생성) |
+| `clawd-info-original.plist` | **앱 원본 Info.plist 백업** (이름 복원용, 최초 apply 때 자동 생성) |
 | `apply-to-clawd.sh` | 도크 아이콘 설정 (Finder 커스텀 아이콘) |
 | `revert-clawd.sh` | 원래대로 복원 |
 | `build-icns.sh` | `<1024.png>` → `.icns` 변환 |
 | `variants/face-*.png` | 9개 포즈 × 감색 배경 + 얼굴확대 (아이콘 후보) |
 | `variants/tr-*.png` | 9개 포즈 × 투명 전신 (참고) |
 | `preview.html` | 후보 비교 페이지 (`open preview.html`) |
+
+## 앱 이름 (도크 라벨)
+
+`apply-to-clawd.sh`는 아이콘과 함께 도크 표시 이름도 **Hongsi**로 바꾼다(`CFBundleDisplayName`).
+다른 이름으로 하려면 환경변수로:
+
+```bash
+DISPLAY_NAME="홍시" ./apply-to-clawd.sh
+```
+
+> ⚠️ **`CFBundleName`은 절대 바꾸지 말 것.** Electron이 이 값에서 헬퍼 앱 이름
+> (`Clawd on Desk Helper.app`)을 파생하기 때문에, 바꾸면 `Unable to find helper app`로
+> 앱이 즉시 크래시한다. 표시 이름은 `CFBundleDisplayName`만 바꾸면 된다.
+>
+> 메뉴바(애플 메뉴 옆 굵은 앱 메뉴)는 Electron이 `app.asar` 안 `package.json`의
+> productName에서 읽을 수 있어 그대로 "Clawd on Desk"일 수 있다. 도크 라벨/Finder 이름은 바뀐다.
 
 ## 기본 아이콘 바꾸기
 

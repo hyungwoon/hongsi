@@ -12,7 +12,7 @@
   - `theme.json` (`name: "Hongsi"`), `assets/*.svg` 9종, `sounds/*.mp3` 2종, `설치방법.txt`
 - `Pixel-Pup-가이드.md` — 앱+테마 설치 원본 가이드 (폴더명만 `hongsi`로 치환해 읽기)
 - `README.md` — 요약 + 동작 매핑
-- `app-icon/` — **Clawd on Desk 도크 아이콘** 패키지 (홍시 슈나우저, 감색 배경+얼굴확대). Finder 커스텀 아이콘 방식이라 앱 업데이트 시 초기화됨 → `app-icon/apply-to-clawd.sh` 재실행으로 복구. 후보 비교는 `app-icon/preview.html`, 상세는 `app-icon/README.md`.
+- `app-icon/` — **Clawd on Desk 도크 아이콘+이름** 패키지 (홍시 슈나우저 감색 배경+얼굴확대, 도크 라벨 "Hongsi"). 번들 `icon.icns` 교체 + `CFBundleDisplayName` 변경 방식(Electron이라 Finder 커스텀 아이콘은 안 먹힘). ⚠️ `CFBundleName`은 헬퍼앱 이름 파생원이라 절대 변경 금지. 앱 업데이트 시 초기화됨 → `app-icon/apply-to-clawd.sh` 재실행으로 아이콘·이름 동시 복구(원본은 `clawd-icon-original.icns`/`clawd-info-original.plist`에 백업). 후보 비교 `app-icon/preview.html`, 상세 `app-icon/README.md`.
 
 ## 진입 가이드
 

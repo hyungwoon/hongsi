@@ -12,6 +12,8 @@ LSREG=/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/La
 [ -f "$BACKUP" ] || { echo "❌ 원본 백업 없음: $BACKUP (이미 원본이거나 백업 유실)"; exit 1; }
 
 cp "$BACKUP" "$ICNS"
+# 이름도 원래대로 (Info.plist 백업이 있으면 복원)
+[ -f "$HERE/clawd-info-original.plist" ] && cp "$HERE/clawd-info-original.plist" "$APP/Contents/Info.plist"
 rm -f "$APP/Icon"$'\r'; SetFile -a c "$APP" 2>/dev/null || true   # Finder 커스텀 아이콘 잔재 제거
 "$LSREG" -f "$APP" 2>/dev/null || true
 if pgrep -f "MacOS/Clawd on Desk$" >/dev/null; then

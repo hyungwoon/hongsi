@@ -30,8 +30,17 @@ esac
 
 # 앱 원본 아이콘 백업(최초 1회만) — 복원용
 [ -f "$HERE/clawd-icon-original.icns" ] || cp "$ICNS" "$HERE/clawd-icon-original.icns"
-
 cp "$SRC" "$ICNS"
+
+# 표시 이름(도크 라벨)도 변경 — CFBundleDisplayName만!
+#   ⚠️ CFBundleName 은 절대 바꾸지 말 것: Electron이 여기서 헬퍼앱 이름
+#   ("Clawd on Desk Helper.app")을 파생하므로 바꾸면 "Unable to find helper app"로 크래시.
+PLIST="$APP/Contents/Info.plist"
+DISPLAY_NAME="${DISPLAY_NAME:-Hongsi}"
+[ -f "$HERE/clawd-info-original.plist" ] || cp "$PLIST" "$HERE/clawd-info-original.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName $DISPLAY_NAME" "$PLIST" 2>/dev/null \
+  || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string $DISPLAY_NAME" "$PLIST"
+
 "$LSREG" -f "$APP" 2>/dev/null || true
 
 # 실행 중이면 재시작해야 도크가 새 아이콘을 읽는다
@@ -41,4 +50,4 @@ if pgrep -f "MacOS/Clawd on Desk$" >/dev/null; then
 fi
 killall Dock 2>/dev/null || true
 open -a "$APP" 2>/dev/null || true
-echo "✅ 적용 완료: $(basename "${1:-hongsi-app-icon.icns}") → $APP (앱 재시작됨)"
+echo "✅ 적용 완료: 아이콘=$(basename "${1:-hongsi-app-icon.icns}"), 이름=$DISPLAY_NAME → $APP (앱 재시작됨)"
