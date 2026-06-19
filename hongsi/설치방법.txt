@@ -1,0 +1,10 @@
+홍시(Hongsi) 테마 설치
+
+1) 이 'hongsi' 폴더를 통째로 themes 폴더에 넣기 (없으면 생성):
+   - macOS:   ~/Library/Application Support/clawd-on-desk/themes/
+   - Windows: %APPDATA%\clawd-on-desk\themes\
+   - Linux:   ~/.config/clawd-on-desk/themes/
+2) 앱 메뉴바 아이콘 -> Settings -> Theme -> 'Hongsi' 선택
+3) 안 보이면 앱 재시작
+
+* Claude Code가 설치/실행 중이어야 강아지가 반응합니다.

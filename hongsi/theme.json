@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "name": "Hongsi",
+  "author": "munsujin",
+  "version": "2.3.0",
+  "description": "Hongsi — a pixel-art schnauzer pup that breathes, reads, types, juggles and celebrates alongside Claude Code. (based on the Pixel Pup theme)",
+  "viewBox": { "x": 0, "y": 0, "width": 1120, "height": 1080 },
+  "eyeTracking": { "enabled": false, "states": [] },
+  "sleepSequence": { "mode": "direct" },
+  "miniMode": { "supported": false },
+  "states": {
+    "idle": ["idle.svg"],
+    "thinking": ["thinking.svg"],
+    "working": ["working.svg"],
+    "attention": ["happy.svg"],
+    "sleeping": ["sleeping.svg"],
+    "waking": ["waking.svg"],
+    "error": ["error.svg"],
+    "notification": ["notification.svg"],
+    "juggling": ["juggling.svg"]
+  },
+  "workingTiers": [
+    { "minSessions": 2, "file": "juggling.svg" },
+    { "minSessions": 1, "file": "working.svg" }
+  ],
+  "jugglingTiers": [
+    { "minSessions": 1, "file": "juggling.svg" }
+  ],
+  "reactions": {
+    "drag": { "file": "idle.svg" },
+    "clickLeft": { "file": "happy.svg", "duration": 2500 },
+    "annoyed": { "file": "error.svg", "duration": 3500 },
+    "double": { "files": ["juggling.svg"], "duration": 3500 }
+  },
+  "sounds": {
+    "complete": "complete.mp3",
+    "confirm": "confirm.mp3"
+  },
+  "timings": {
+    "minDisplay": { "attention": 4500, "error": 5000, "notification": 5000, "working": 300, "thinking": 300 },
+    "autoReturn": { "attention": 4500, "error": 5000, "notification": 5000 },
+    "yawnDuration": 3000,
+    "wakeDuration": 1500,
+    "deepSleepTimeout": 600000,
+    "mouseIdleTimeout": 20000,
+    "mouseSleepTimeout": 60000
+  },
+  "hitBoxes": {
+    "default": { "x": 150, "y": 180, "w": 820, "h": 800 },
+    "sleeping": { "x": 120, "y": 520, "w": 880, "h": 480 },
+    "wide": { "x": 110, "y": 140, "w": 900, "h": 840 }
+  },
+  "wideHitboxFiles": ["error.svg", "notification.svg"],
+  "sleepingHitboxFiles": ["sleeping.svg"],
+  "layout": {
+    "contentBox": { "x": 70, "y": 50, "width": 980, "height": 990 },
+    "centerX": 560,
+    "baselineY": 1040,
+    "visibleHeightRatio": 0.55,
+    "baselineBottomRatio": 0.05
+  }
+}
