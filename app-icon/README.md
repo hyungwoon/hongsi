@@ -1,9 +1,14 @@
 # 홍시 앱 아이콘 (Clawd on Desk 도크 아이콘)
 
 홍시 슈나우저를 **Clawd on Desk** 앱의 도크 아이콘으로 쓰기 위한 패키지.
-앱 번들의 서명/실행파일을 건드리지 않는 **Finder 커스텀 아이콘** 방식이라 안전하고 되돌리기 쉽다.
 
-> ⚠️ 이 방식은 앱이 **자동업데이트되면 초기화**된다. 그때마다 `apply-to-clawd.sh`만 다시 실행하면 복구된다.
+> **방식:** 번들 안 `Contents/Resources/icon.icns`를 교체한다. Clawd는 Electron 앱이라
+> 실행 시 이 icns로 도크 타일을 그리기 때문에, Finder 커스텀 아이콘 방식은 도크엔 안 먹힌다.
+> 리소스만 바꾸므로 서명 seal 경고는 뜨지만 hardened runtime 실행엔 무관(앱 정상 실행 확인됨).
+> 실행 파일/엔타이틀먼트는 안 건드린다.
+
+> ⚠️ 앱이 **자동업데이트되면 icon.icns가 원래대로 덮어써진다**. 그때마다 `apply-to-clawd.sh`만
+> 다시 실행하면 복구된다. 원본은 `clawd-icon-original.icns`로 백업돼 있다.
 
 ## 빠른 사용
 
@@ -20,8 +25,9 @@ cd app-icon
 
 | 파일 | 용도 |
 |------|------|
-| `hongsi-app-icon.png` | **현재 기본 아이콘** (1024px, = `variants/face-idle.png`) |
-| `hongsi-app-icon.icns` | 보관용 .icns (번들 직접 교체나 타 용도) |
+| `hongsi-app-icon.png` | **현재 기본 아이콘** 원본 (1024px, = `variants/face-idle.png`) |
+| `hongsi-app-icon.icns` | 실제 적용에 쓰는 .icns (apply 기본 소스) |
+| `clawd-icon-original.icns` | **앱 원본 아이콘 백업** (revert 복원용, 최초 apply 때 자동 생성) |
 | `apply-to-clawd.sh` | 도크 아이콘 설정 (Finder 커스텀 아이콘) |
 | `revert-clawd.sh` | 원래대로 복원 |
 | `build-icns.sh` | `<1024.png>` → `.icns` 변환 |
@@ -46,13 +52,15 @@ cp variants/face-happy.png hongsi-app-icon.png
 SVG 렌더는 macOS 기본 `qlmanage`(QuickLook)를 쓴다 — 외부 의존성 없음.
 재생성 로직은 커밋 히스토리의 생성 스크립트 참고.
 
-## 동작 원리 (Finder 커스텀 아이콘)
+## 동작 원리 (번들 icon.icns 교체)
 
-1. `sips -i icon.png` — PNG 리소스 포크에 `icns` 리소스 추가
-2. `DeRez -only icns` — 그 리소스를 추출
-3. `Rez -append … -o "$APP/Icon"$'\r'` — 번들 안 특수 `Icon`(끝 CR) 파일에 기록
-4. `SetFile -a C "$APP"` — 번들에 "커스텀 아이콘 있음" 플래그
-5. `SetFile -a V "Icon"` — Icon 파일 숨김
+1. 최초 1회 원본 `icon.icns`를 `clawd-icon-original.icns`로 백업
+2. `hongsi-app-icon.icns`를 `$APP/Contents/Resources/icon.icns`로 복사
+3. `lsregister -f "$APP"` — LaunchServices에 번들 재등록(아이콘 다시 읽힘)
+4. 실행 중이면 앱 종료 후 `open` — Electron이 새 icns로 도크 타일을 그림
 
-복원은 `Icon` 파일 삭제 + `SetFile -a c`(소문자)로 플래그 해제.
-필요 도구(`sips`/`DeRez`/`Rez`/`SetFile`/`iconutil`)는 모두 macOS + Xcode CLT 기본 제공.
+복원(`revert-clawd.sh`)은 `clawd-icon-original.icns`를 다시 덮어쓰고 재등록·재시작.
+필요 도구(`sips`/`iconutil`/`lsregister`/`osascript`)는 모두 macOS 기본 제공.
+
+> 참고: Finder 표시 아이콘만 바꾸고 싶을 땐 Finder 커스텀 아이콘(`Icon\r` + `SetFile -a C`)도
+> 가능하지만, 실행 중인 Electron 도크 타일에는 적용되지 않아 여기선 쓰지 않는다.

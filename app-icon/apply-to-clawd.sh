@@ -1,29 +1,44 @@
 #!/usr/bin/env bash
-# 홍시 아이콘을 "Clawd on Desk" 도크 아이콘으로 설정한다.
-# Finder 커스텀 아이콘 방식 — 앱 번들의 Mach-O/서명을 건드리지 않으므로 안전하고 되돌리기 쉽다.
-# 앱이 자동업데이트되어 아이콘이 원래대로 돌아가면 이 스크립트를 다시 실행만 하면 된다.
+# 홍시 아이콘을 "Clawd on Desk" 도크 아이콘으로 적용한다.
 #
-#   ./apply-to-clawd.sh                       # 기본 아이콘(hongsi-app-icon.png) 적용
-#   ./apply-to-clawd.sh variants/face-happy.png   # 다른 포즈로 적용
-#   ./apply-to-clawd.sh <png> "/Applications/다른앱.app"
+# 방식: 앱 번들의 Contents/Resources/icon.icns 를 직접 교체한다.
+#   Clawd는 Electron 앱이라 실행 시 번들 icon.icns 로 도크 타일을 그린다.
+#   (Finder 커스텀 아이콘 방식은 실행 중 Electron이 덮어써서 도크엔 안 먹힘)
+#   리소스만 바꾸므로 코드 서명 seal 경고는 뜨지만 hardened runtime 실행엔 무관.
+#
+# 앱이 자동업데이트되어 아이콘이 원래대로 돌아가면 이 스크립트만 다시 실행하면 된다.
+#
+#   ./apply-to-clawd.sh                          # 기본(hongsi-app-icon.icns) 적용
+#   ./apply-to-clawd.sh hongsi-app-icon.icns     # 특정 icns
+#   ./apply-to-clawd.sh variants/face-happy.png  # png를 주면 즉석에서 icns 빌드
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PNG="${1:-$HERE/hongsi-app-icon.png}"
+SRC="${1:-$HERE/hongsi-app-icon.icns}"
 APP="${2:-/Applications/Clawd on Desk.app}"
+ICNS="$APP/Contents/Resources/icon.icns"
+LSREG=/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister
 
-[ -f "$PNG" ] || { echo "❌ 아이콘 PNG 없음: $PNG"; exit 1; }
 [ -d "$APP" ] || { echo "❌ 앱 없음: $APP"; exit 1; }
+[ -f "$SRC" ] || { echo "❌ 소스 없음: $SRC"; exit 1; }
 
-TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
-cp "$PNG" "$TMP/icon.png"
-sips -i "$TMP/icon.png" >/dev/null                 # PNG 리소스 포크에 icns 추가
-DeRez -only icns "$TMP/icon.png" > "$TMP/icon.rsrc" # icns 리소스 추출
-ICONF="$APP/Icon"$'\r'                              # 번들 안 특수 Icon 파일(끝에 CR)
-rm -f "$ICONF"
-Rez -append "$TMP/icon.rsrc" -o "$ICONF"           # Icon 파일에 아이콘 기록
-SetFile -a C "$APP"                                 # 번들에 "커스텀 아이콘 있음" 플래그
-SetFile -a V "$ICONF"                               # Icon 파일 숨김
-touch "$APP"
+# png를 주면 임시 icns로 변환
+case "$SRC" in
+  *.png) TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+         "$HERE/build-icns.sh" "$SRC" "$TMP/icon.icns" >/dev/null
+         SRC="$TMP/icon.icns" ;;
+esac
+
+# 앱 원본 아이콘 백업(최초 1회만) — 복원용
+[ -f "$HERE/clawd-icon-original.icns" ] || cp "$ICNS" "$HERE/clawd-icon-original.icns"
+
+cp "$SRC" "$ICNS"
+"$LSREG" -f "$APP" 2>/dev/null || true
+
+# 실행 중이면 재시작해야 도크가 새 아이콘을 읽는다
+if pgrep -f "MacOS/Clawd on Desk$" >/dev/null; then
+  osascript -e 'quit app "Clawd on Desk"' 2>/dev/null || true
+  sleep 2
+fi
 killall Dock 2>/dev/null || true
-echo "✅ 적용 완료: $(basename "$PNG") → $APP"
-echo "   도크에 바로 안 보이면 잠시 후 자동 갱신되거나, 로그아웃/로그인 하세요."
+open -a "$APP" 2>/dev/null || true
+echo "✅ 적용 완료: $(basename "${1:-hongsi-app-icon.icns}") → $APP (앱 재시작됨)"
