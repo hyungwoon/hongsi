@@ -3,3 +3,7 @@ node_modules/
 .omc/
 .recon/
 *.log
+
+# LinkedIn 카드 산출물(용량 큼)·렌더 임시
+linkedin/out/
+linkedin/.vid-tmp/

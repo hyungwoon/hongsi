@@ -1,0 +1,56 @@
+[
+  {
+    "key": "idle",
+    "label": "대기",
+    "en": "idle",
+    "desc": "숨 쉬며 가만히 대기해요"
+  },
+  {
+    "key": "thinking",
+    "label": "생각 중",
+    "en": "thinking",
+    "desc": "골똘히 읽고 고민하는 중"
+  },
+  {
+    "key": "working",
+    "label": "작업 중",
+    "en": "working",
+    "desc": "열심히 타이핑하는 중"
+  },
+  {
+    "key": "juggling",
+    "label": "멀티태스킹",
+    "en": "juggling",
+    "desc": "여러 세션을 동시에 저글링"
+  },
+  {
+    "key": "attention",
+    "label": "반가움",
+    "en": "attention",
+    "desc": "쓰다듬으면 신나서 기뻐해요"
+  },
+  {
+    "key": "notification",
+    "label": "알림",
+    "en": "notification",
+    "desc": "확인할 게 있어요!"
+  },
+  {
+    "key": "error",
+    "label": "삐짐",
+    "en": "error",
+    "desc": "문제가 생겨 뾰로통해요"
+  },
+  {
+    "key": "sleeping",
+    "label": "수면",
+    "en": "sleeping",
+    "desc": "오래 쉬면 새근새근 잠들어요"
+  },
+  {
+    "key": "waking",
+    "label": "기상",
+    "en": "waking",
+    "desc": "하품하며 천천히 깨어나요"
+  }
+]
